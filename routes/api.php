@@ -10,6 +10,7 @@ use App\Http\Controllers\TranscriptTypesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -20,6 +21,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/tokens', [AuthController::class, 'tokens']);
     Route::delete('/tokens/{id}', [AuthController::class, 'revokeToken']);
+
+    Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
     Route::prefix('user')->group(function () {
         Route::get('/', [UserController::class, 'show']);

@@ -37,7 +37,10 @@ class SubscriptionController extends Controller
                 'cancel_url' => config('app.frontend_url') . '/?checkout_cancelled=true',
             ]);
 
-        return response()->json(['url' => $checkout->url]);
+        return response()->json([
+            'url' => $checkout->url,
+            'session_id' => $checkout->id
+        ]);
     }
 
     public function cancel(Request $request)

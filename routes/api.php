@@ -30,12 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     
     Route::prefix('documents')->group(function () {
-        Route::post('/generate', [DocumentController::class, 'generate'])
-            ->middleware('free.transcript.limit');
+        Route::post('/generate', [DocumentController::class, 'generate']);
         Route::post('/refine', [DocumentController::class, 'refine'])
             ->middleware('check.subscription');
         Route::put('/{document}', [DocumentController::class, 'update']);
-            // ->middleware('free.transcript.limit');
         Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });
     Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
@@ -73,33 +71,36 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/cancel', [SubscriptionController::class, 'cancel']);
         Route::get('/verify-checkout', [SubscriptionController::class, 'verifyCheckout']);
     });
-    
-    Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
-        return response()->stream(function () use ($documentId) {
-    
-            $timeout = 15;
-            $start = time();
-            while (true) {
-                $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
-    
-                if ($response) {
-                    ob_flush();
-                    flush();
-                    break; // encerra a conexão após enviar
-                }
-    
-                if ((time() - $start) > $timeout) {
-                    ob_flush();
-                    flush();
-                    break;
-                }
-    
-                sleep(1);
+});
+
+Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
+    return response()->stream(function () use ($documentId) {
+
+        $timeout = 15;
+        $start = time();
+        while (true) {
+            $response = Cache::pull("insights_ai_{$documentId}"); // pega e apaga
+
+            if ($response) {
+                echo "data: " . json_encode($response) . "\n\n";
+                ob_flush();
+                flush();
+                break; // encerra a conexão após enviar
             }
-        }, 200, [
-            'Content-Type' => 'text/event-stream',
-            'Cache-Control' => 'no-cache',
-            'Connection' => 'keep-alive',
-        ]);
-    });
+
+            if ((time() - $start) > $timeout) {
+                echo "event: timeout\n";
+                echo "data: {}\n\n";
+                ob_flush();
+                flush();
+                break;
+            }
+
+            sleep(1);
+        }
+    }, 200, [
+        'Content-Type' => 'text/event-stream',
+        'Cache-Control' => 'no-cache',
+        'Connection' => 'keep-alive',
+    ]);
 });

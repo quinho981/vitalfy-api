@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -36,8 +38,15 @@ class Transcript extends Model
         return $this->hasOne(Document::class);
     }
 
-    public function transcriptType(): BelongsTo 
+    public function transcriptType(): BelongsTo
     {
         return $this->belongsTo(TranscriptType::class);
+    }
+
+    public function scopeFromUserBetweenDates(Builder $query, int $userId, Carbon $start, Carbon $end): Builder
+    {
+        return $query
+            ->where('user_id', $userId)
+            ->whereBetween('created_at', [$start, $end]);
     }
 }

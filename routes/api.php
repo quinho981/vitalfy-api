@@ -1,16 +1,21 @@
 <?php
 
+use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentTemplateController;
+use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TranscriptController;
 use App\Http\Controllers\TranscriptTypesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
+use Laravel\Cashier\Http\Controllers\WebhookController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+
+Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
@@ -26,15 +31,18 @@ Route::middleware('auth:sanctum')->group(function () {
     
     Route::prefix('documents')->group(function () {
         Route::post('/generate', [DocumentController::class, 'generate']);
-        Route::post('/refine', [DocumentController::class, 'refine']);
+        Route::post('/refine', [DocumentController::class, 'refine'])
+            ->middleware('check.subscription');
         Route::put('/{document}', [DocumentController::class, 'update']);
         Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });
     Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
 
     Route::prefix('transcripts')->group(function () {
-        Route::post('/', [TranscriptController::class, 'store']);
-        Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
+        Route::middleware('free.transcript.limit')->group(function () {
+            Route::post('/', [TranscriptController::class, 'store']);
+            Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
+        });
         Route::get('/user/filter', [TranscriptController::class, 'filterUserTranscripts']);
         Route::put('/{transcript}', [TranscriptController::class, 'update']);
         Route::get('/{transcript}', [TranscriptController::class, 'show']);
@@ -56,8 +64,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/charts', [TranscriptController::class, 'getDashboardCharts']);
         Route::get('/last-transcripts', [TranscriptController::class, 'getlatestRecentTranscripts']);
     });
-});
 
+    Route::prefix('subscription')->group(function () {
+        Route::get('/', [SubscriptionController::class, 'index']);
+        Route::post('/checkout', [SubscriptionController::class, 'checkout']);
+        Route::post('/cancel', [SubscriptionController::class, 'cancel']);
+        Route::get('/verify-checkout', [SubscriptionController::class, 'verifyCheckout']);
+    });
+});
 
 Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
     return response()->stream(function () use ($documentId) {

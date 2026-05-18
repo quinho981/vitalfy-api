@@ -12,7 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        $middleware->alias([
+            'check.subscription' => \App\Http\Middleware\CheckSubscription::class,
+            'free.transcript.limit' => \App\Http\Middleware\CheckTranscriptLimit::class
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -17,13 +17,6 @@ class DocumentService
 {
     protected const MODEL_NAME = 'llama-3.3-70b-versatile';
 
-    protected TranscriptService $transcriptService;
-
-    public function __construct(TranscriptService $transcriptService)
-    {
-        $this->transcriptService = $transcriptService;
-    }
-
     public function createDocumentAndDispatchInsights($request)
     {
         $documentContent = $this->generateLlmDocument($request['conversation'], $request['template']);

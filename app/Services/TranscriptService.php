@@ -2,26 +2,33 @@
 
 namespace App\Services;
 
+use App\Http\Requests\StoreTranscriptRequest;
+use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Transcript;
+use App\Support\PlanLimits;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class TranscriptService
 {
     protected Transcript $transcript;
     protected DeepgramService $deepgramService;
+    protected DocumentService $documentService;
 
     public function __construct(
         Transcript $transcript, 
-        DeepgramService $deepgramService
+        DeepgramService $deepgramService,
+        DocumentService $documentService
     )
     {
         $this->transcript = $transcript;
         $this->deepgramService = $deepgramService;
+        $this->documentService = $documentService;
     }
 
     public function getUserTranscripts(int $userId): LengthAwarePaginator
@@ -114,8 +121,11 @@ class TranscriptService
         ];
     }
 
-    public function processAudioAndCreate($request): Transcript
+    public function processAudioAndCreate(StoreTranscriptRequest $request): array
     {
+        $user = $request->user();
+        $remainingTranscripts = null;
+
         [
             'file' => $file,
             'utterances' => $utterances,
@@ -123,7 +133,7 @@ class TranscriptService
         ] = $this->processAudioAndBuildConversation($request);
 
         $transcript = Transcript::create([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'patient' => $request['patient'],
             'conversation' => $conversation,
             'transcript_type_id' => $request['type'],
@@ -131,7 +141,69 @@ class TranscriptService
             'file_size' => $file->getSize()
         ]);
 
-        return $transcript;
+        if(!$user->hasProPlan()) {
+            $remainingTranscripts = $this->getRemainingMonthlyTranscripts($user->id);
+        }
+
+        return [
+            'transcript' => $transcript,
+            'remaining' => $remainingTranscripts
+        ];
+    }
+
+    public function storeAndGenerateDocument(StoreTranscriptRequest $request)
+    {
+        $user = $request->user();
+        $remainingTranscripts = null;
+    
+        [
+            'file' => $file,
+            'utterances' => $utterances,
+            'conversation' => $conversation
+        ] = $this->processAudioAndBuildConversation($request);
+
+        $documentContent = $this->documentService->generateLlmDocument($conversation, $request['template']);
+
+        $document = DB::transaction(function () use ($request, $file, $utterances, $conversation, $documentContent) {
+            $transcript = Transcript::create([
+                'user_id' => Auth::id(),
+                'patient' => $request['patient'],
+                'conversation' => $conversation,
+                'transcript_type_id' => $request['type'],
+                'end_conversation_time' => $this->getLastEndUtteranceTime($utterances),
+                'file_size' => $file->getSize()
+            ]);
+    
+            $document = $transcript->document()->create([
+                'document_template_id' => $request['template'],
+                'patient' => $request['patient'],
+                'result' => $documentContent,
+                'transcript_id' => $request['transcript_id']
+            ]);
+
+            return $document;
+        });
+
+        if(!$user->hasProPlan()) {
+            $remainingTranscripts = $this->getRemainingMonthlyTranscripts($user->id);
+        }
+
+        ProcessGenerateInsightsAI::dispatch($document->id, $conversation);
+
+        return [
+            'document' => $document,
+            'remaining' => $remainingTranscripts
+        ];
+    }
+
+    private function getRemainingMonthlyTranscripts(int $userId): int
+    {
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
+
+        $usedTranscripts = Transcript::fromUserBetweenDates($userId, $startOfMonth, $endOfMonth)->count();
+
+        return PlanLimits::FREE_MONTHLY_TRANSCRIPTS - $usedTranscripts;
     }
 
     private function getAudioContent($file): array

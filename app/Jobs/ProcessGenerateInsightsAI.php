@@ -13,8 +13,8 @@ class ProcessGenerateInsightsAI implements ShouldQueue
 {
     use Queueable;
 
-    protected $documentId;
-    protected $conversation;
+    protected int $documentId;
+    protected array $conversation;
 
     /**
      * Create a new job instance.

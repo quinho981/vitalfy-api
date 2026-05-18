@@ -4,14 +4,16 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens;
+    use HasFactory, Notifiable, HasApiTokens, Billable;
 
     /**
      * The attributes that are mass assignable.
@@ -48,11 +50,30 @@ class User extends Authenticatable
         ];
     }
 
-    public function plans()
+    public function subscriptions(): HasMany
     {
-        return $this->belongsToMany(Plan::class, 'user_plans', 'user_id', 'plan_id')
-                    ->withTimestamps()
-                    ->withPivot(['unsubscription_at', 'active'])
-                    ->latest();
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function plan()
+    {
+        $subscription = $this->activeSubscription()->first();
+
+        return $subscription ? (object) ['name' => $subscription->type] : (object) ['name' => 'Free'];
+    }
+
+    public function hasProPlan(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
+    private function activeSubscription()
+    {
+        return $this->subscriptions()
+            ->where('stripe_status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>', now());
+            });
     }
 }

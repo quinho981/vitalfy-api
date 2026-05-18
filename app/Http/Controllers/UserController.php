@@ -4,21 +4,38 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
-use App\Models\User;
+use App\Models\Transcript;
+use App\Support\PlanLimits;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function show()
+    public function show(): JsonResponse
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $remainingTranscripts = null;
+        $startOfMonth = now()->startOfMonth();
+        $endOfMonth = now()->endOfMonth();
 
-        $user = User::select(['id', 'name', 'email', 'phone'])
-                    ->with('plans')
-                    ->find($userId);
+        $plan = $user->plan();
+
+        if (!$user->hasProPlan()) {
+            $transcriptsUsed = Transcript::fromUserBetweenDates($user->id, $startOfMonth, $endOfMonth)->withTrashed()->count();
+            $remainingTranscripts = PlanLimits::FREE_MONTHLY_TRANSCRIPTS - $transcriptsUsed;
+        }
         
-        return response()->json($user);
+        return response()->json([
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+            ],
+            'plan' => $plan,
+            'remaining' => $remainingTranscripts
+        ]);
     }
 
     public function update(UpdateUserRequest $request)

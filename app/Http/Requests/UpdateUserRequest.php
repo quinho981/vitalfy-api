@@ -35,9 +35,10 @@ class UpdateUserRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'email' => ['sometimes', 'required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'regex:/^\d{10,11}$/'],
+            'recording_tour_completed' => ['boolean'],
         ];
     }
 

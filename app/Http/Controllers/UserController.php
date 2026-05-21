@@ -32,6 +32,7 @@ class UserController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'recording_tour_completed' => $user->recording_tour_completed,
             ],
             'plan' => $plan,
             'remaining' => $remainingTranscripts

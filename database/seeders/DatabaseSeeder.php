@@ -12,10 +12,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            DocumentTemplateCategorySeeder::class,
             DocumentTemplateSeeder::class,
             TranscriptTypesSeeder::class,
-            PlansSeeder::class,
-            DocumentTemplateCategorySeeder::class
         ]);
     }
 }

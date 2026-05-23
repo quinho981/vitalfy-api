@@ -13,37 +13,37 @@ use Illuminate\Support\Facades\Cache;
 
 class DashboardService
 {
-    public function summary(): array
+    public function summary(?string $period = 'today'): array
     {
         $userId = Auth::id();
-        $startToday = now()->startOfDay();
-        $endToday = now()->endOfDay();
+        [$start, $end] = $this->getPeriodDates($period);
         
-        $transcriptsCountToday = Cache::remember("dashboard:summary:today:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->count();
+        $cacheKey = "dashboard:summary:{$period}:{$userId}";
+        $transcriptsCount = Cache::remember("{$cacheKey}:count", 300, function () use ($userId, $start, $end) {
+                                return $this->transcriptsTodayQuery($userId, $start, $end)->count();
                             });
 
-        $transcriptsDurationToday = Cache::remember("dashboard:summary:time:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->sum('end_conversation_time');
+        $transcriptsDuration = Cache::remember("{$cacheKey}:time", 300, function () use ($userId, $start, $end) {
+                                return $this->transcriptsTodayQuery($userId, $start, $end)->sum('end_conversation_time');
                             });
 
-        $urgentTranscriptsCountToday = Cache::remember("dashboard:summary:urgent:{$userId}", 300, function () use ($userId, $startToday, $endToday) {
-                                return $this->transcriptsTodayQuery($userId, $startToday, $endToday)->where('transcript_type_id', TranscriptsTypeEnum::URGENTE->value)->count();
+        $urgentTranscriptsCount = Cache::remember("{$cacheKey}:urgent", 300, function () use ($userId, $start, $end) {
+                                return $this->transcriptsTodayQuery($userId, $start, $end)->where('transcript_type_id', TranscriptsTypeEnum::URGENTE->value)->count();
                             });
 
-        $transcriptsCountWithTrashedToday = $this->transcriptsTodayQuery($userId, $startToday, $endToday)->withTrashed()->count();
-        $documentCountWithTrashehdToday = $this->documentsTodayQuery($userId, $startToday, $endToday)->withTrashed()->count();
+        $transcriptsCountWithTrashed = $this->transcriptsTodayQuery($userId, $start, $end)->withTrashed()->count();
+        $documentCountWithTrashed = $this->documentsTodayQuery($userId, $start, $end)->withTrashed()->count();
 
         return [
-            'transcriptsCountToday' => $transcriptsCountToday,
-            'transcriptsDurationToday' => $transcriptsDurationToday,
-            'urgentTranscriptsCountToday' => $urgentTranscriptsCountToday,
-            'averageTranscriptsTime' => $this->averageTranscriptsTime($transcriptsDurationToday, $transcriptsCountToday),
+            'transcriptsCountToday' => $transcriptsCount,
+            'transcriptsDurationToday' => $transcriptsDuration,
+            'urgentTranscriptsCountToday' => $urgentTranscriptsCount,
+            'averageTranscriptsTime' => $this->averageTranscriptsTime($transcriptsDuration, $transcriptsCount),
             
-            'transcriptsCountWithTrashedToday' => $transcriptsCountWithTrashedToday,
-            'transcriptDiscarded' => $this->transcriptsTodayQuery($userId, $startToday, $endToday)->onlyTrashed()->count(),
-            'documentCountWithTrashehdToday' => $documentCountWithTrashehdToday,
-            'documentDiscarded' => $this->documentsTodayQuery($userId, $startToday, $endToday)->onlyTrashed()->count()
+            'transcriptsCountWithTrashedToday' => $transcriptsCountWithTrashed,
+            'transcriptDiscarded' => $this->transcriptsTodayQuery($userId, $start, $end)->onlyTrashed()->count(),
+            'documentCountWithTrashehdToday' => $documentCountWithTrashed,
+            'documentDiscarded' => $this->documentsTodayQuery($userId, $start, $end)->onlyTrashed()->count()
         ];
     }
 
@@ -73,6 +73,16 @@ class DashboardService
             ->latest()
             ->limit(4)
             ->get();
+    }
+
+    private function getPeriodDates(string $period): array
+    {
+        return match($period) {
+            'today' => [now()->startOfDay(), now()->endOfDay()],
+            'week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'month' => [now()->startOfMonth(), now()->endOfMonth()],
+            default => [now()->startOfDay(), now()->endOfDay()],
+        };
     }
 
     private function transcriptsTodayQuery(int $userId, Carbon $start, Carbon $end)
@@ -125,10 +135,12 @@ class DashboardService
 
     public static function clear(int $userId)
     {
-        Cache::forget("dashboard:summary:today:{$userId}");
-        Cache::forget("dashboard:summary:time:{$userId}");
-        Cache::forget("dashboard:summary:urgent:{$userId}");
-        Cache::forget("dashboard:charts:week:{$userId}");
-        Cache::forget("dashboard:charts:type:{$userId}");
+        foreach (['today', 'week', 'month'] as $period) {
+            Cache::forget("dashboard:summary:{$period}:{$userId}:count");
+            Cache::forget("dashboard:summary:{$period}:{$userId}:time");
+            Cache::forget("dashboard:summary:{$period}:{$userId}:urgent");
+            Cache::forget("dashboard:charts:{$period}:{$userId}");
+            Cache::forget("dashboard:charts:type:{$period}:{$userId}");
+        }
     }
 }

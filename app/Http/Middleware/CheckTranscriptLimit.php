@@ -3,14 +3,13 @@
 namespace App\Http\Middleware;
 
 use App\Models\Transcript;
+use App\Support\PlanLimits;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckTranscriptLimit
 {
-    const FREE_TRANSCRIPT_LIMIT = 10;
-
     /**
      * Handle an incoming request.
      *
@@ -28,7 +27,7 @@ class CheckTranscriptLimit
         $currentMonthEnd = now()->endOfMonth();
         $monthlyTranscriptCount = Transcript::fromUserBetweenDates($user->id, $currentMonthStart, $currentMonthEnd)->count();
 
-        if ($monthlyTranscriptCount >= self::FREE_TRANSCRIPT_LIMIT) {
+        if ($monthlyTranscriptCount >= PlanLimits::FREE_MONTHLY_TRANSCRIPTS) {
             return response()->json([
                 'success' => false,
                 'message' => 'You have reached your monthly transcription limit.'

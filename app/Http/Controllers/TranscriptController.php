@@ -90,9 +90,10 @@ class TranscriptController extends Controller
         return $this->transcriptService->searchUserTranscripts($request->all(), $userId);
     }
 
-    public function getDashboardSummary() 
+    public function getDashboardSummary(Request $request) 
     {
-        return $this->dashboardService->summary();
+        $period = $request->query('period', 'today');
+        return $this->dashboardService->summary($period);
     }
     
     public function getDashboardCharts() 

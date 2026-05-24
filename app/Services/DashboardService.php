@@ -50,8 +50,8 @@ class DashboardService
     public function charts(): array
     {
         $userId = Auth::id();
-        $startWeek = now()->startOfWeek();
-        $endWeek = now()->endOfWeek();
+        $startWeek = now()->startOfWeek(Carbon::SUNDAY);
+        $endWeek = now()->endOfWeek(Carbon::SATURDAY);
 
         return [
             'transcriptsByWeek' => $this->currentWeekTranscripts($userId, $startWeek, $endWeek),
@@ -79,7 +79,7 @@ class DashboardService
     {
         return match($period) {
             'today' => [now()->startOfDay(), now()->endOfDay()],
-            'week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'week' => [now()->startOfWeek(Carbon::SUNDAY), now()->endOfWeek(Carbon::SATURDAY)],
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
             default => [now()->startOfDay(), now()->endOfDay()],
         };

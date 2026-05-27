@@ -13,8 +13,6 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /var/www
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*    
-
 RUN docker-php-ext-install \
     pdo \
     pdo_pgsql \
@@ -24,7 +22,9 @@ RUN docker-php-ext-install \
     bcmath \
     gd \
     zip \
-    opcache
+    opcache \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 RUN pecl install redis \
     && docker-php-ext-enable redis
@@ -32,3 +32,4 @@ RUN pecl install redis \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 COPY ./docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
+COPY ./docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini

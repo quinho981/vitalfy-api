@@ -15,22 +15,22 @@ services:
       - db
       - redis
 
-  queue:
+  horizon:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    container_name: vitalfy_queue
+    container_name: vitalfy_horizon
     restart: unless-stopped
     working_dir: /var/www
-    command: php artisan queue:work --verbose --tries=3 --timeout=90 --max-time=3600
+    command: php artisan horizon
     volumes:
       - ./:/var/www:cached
       - vendor_data:/var/www/vendor
     networks:
       - laravel
     depends_on:
-      - db
-      - redis
+    - db
+    - redis
 
   nginx:
     image: nginx:alpine

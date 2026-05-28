@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Document;
 use App\Services\DocumentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Spatie\LaravelPdf\Facades\Pdf;
 
@@ -29,6 +31,19 @@ class DocumentController extends Controller
 
     public function generate(Request $request) {
         return $this->documentService->createDocumentAndDispatchInsights($request->all());
+    }
+
+    public function regenerateInsights(Document $document): JsonResponse
+    {
+        $this->authorize('update', $document);
+
+        $conversation = $document->transcript->conversation;
+
+        ProcessGenerateInsightsAI::dispatch($document->id, $conversation);
+
+        return response()->json([
+            'message' => 'Insights regeneration started'
+        ], 200);
     }
 
     public function refine(Request $request)

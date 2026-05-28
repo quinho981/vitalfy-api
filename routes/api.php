@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/generate', [DocumentController::class, 'generate']);
         Route::post('/refine', [DocumentController::class, 'refine'])
             ->middleware('check.subscription');
+        Route::post('/{document}/regenerate-insights', [DocumentController::class, 'regenerateInsights']);
         Route::put('/{document}', [DocumentController::class, 'update']);
         Route::get('/{document}/pdf', [DocumentController::class, 'generatePdf']);
     });

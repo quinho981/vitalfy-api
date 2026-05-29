@@ -12,12 +12,17 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Route;
 use Laravel\Cashier\Http\Controllers\WebhookController;
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::middleware('throttle:auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+});
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware([
+    'auth:sanctum', 
+    'throttle:api'
+])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
@@ -40,7 +45,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user/transcripts', [TranscriptController::class, 'indexByUser']);
 
     Route::prefix('transcripts')->group(function () {
-        Route::middleware('free.transcript.limit')->group(function () {
+        Route::middleware([
+            'free.transcript.limit', 
+            'throttle:transcripts'
+        ])->group(function () {
             Route::post('/', [TranscriptController::class, 'store']);
             Route::post('/generate-document', [TranscriptController::class, 'storeAndGenerateDocument']);
         });
@@ -74,7 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::get('/stream/insights-ai/{documentId}', function ($documentId) {
+Route::middleware('throttle:stream')->get('/stream/insights-ai/{documentId}', function ($documentId) {
     return response()->stream(function () use ($documentId) {
 
         $timeout = 15;

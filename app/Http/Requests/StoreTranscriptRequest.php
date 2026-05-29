@@ -22,10 +22,16 @@ class StoreTranscriptRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'audio' => 'required|file',
-            'patient' => 'required|string',
-            'type' => 'required|integer',
-            'template' => 'required|integer'
+            'audio' => [
+                'required',
+                'file',
+                'max:102400',
+                'mimes:mp3,wav,m4a,aac,ogg,flac,webm',
+                'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/x-wav,audio/mp4,audio/x-m4a,audio/aac,audio/ogg,audio/flac,audio/webm'
+            ],
+            'patient' => 'required|string|max:255',
+            'type' => 'required|integer|exists:transcript_types,id',
+            'template' => 'required|integer|exists:document_templates,id',
         ];
     }
 }

@@ -5,14 +5,14 @@ namespace App\Services;
 use App\Http\Requests\StoreTranscriptRequest;
 use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Transcript;
+use App\Support\AudioLimits;
 use App\Support\PlanLimits;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 class TranscriptService
 {
@@ -33,7 +33,6 @@ class TranscriptService
 
     public function getUserTranscripts(int $userId): LengthAwarePaginator
     {
-        // TODO: aplicar cache com redis
         return $this->baseTranscriptHistoryQuery()
             ->where('user_id', $userId)
             ->paginate(10);
@@ -132,6 +131,8 @@ class TranscriptService
             'conversation' => $conversation
         ] = $this->processAudioAndBuildConversation($request);
 
+        $this->validateAudioDuration($utterances);
+
         $transcript = Transcript::create([
             'user_id' => $user->id,
             'patient' => $request['patient'],
@@ -161,6 +162,8 @@ class TranscriptService
             'utterances' => $utterances,
             'conversation' => $conversation
         ] = $this->processAudioAndBuildConversation($request);
+
+        $this->validateAudioDuration($utterances);
 
         $documentContent = $this->documentService->generateLlmDocument($conversation, $request['template']);
 
@@ -237,5 +240,20 @@ class TranscriptService
         $lastUtterance = end($utterances);
         // TODO: AJUSTAR TIPO DE DADO NO BANCO PARA CONSEGUIR REGISTRAR FLOAT
         return floor($lastUtterance['end']);
+    }
+
+    private function validateAudioDuration($utterances): void
+    {
+        $duration = $this->getLastEndUtteranceTime($utterances);
+
+        if ($duration > AudioLimits::MAX_RECORDING_DURATION_SECONDS) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'O áudio excede o limite máximo de %d minutos. Duração atual: %d segundos.',
+                    AudioLimits::MAX_RECORDING_DURATION_SECONDS / 60,
+                    $duration
+                )
+            );
+        }
     }
 }

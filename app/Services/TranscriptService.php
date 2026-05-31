@@ -217,7 +217,7 @@ class TranscriptService
         return ['content' => $content, 'mimeType' => $mimeType];
     }
 
-    private function organizeUtterances($utterances): array
+    private function organizeUtterances(array $utterances): array
     {
         $conversation = [];
 

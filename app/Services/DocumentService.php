@@ -5,19 +5,14 @@ namespace App\Services;
 use App\Jobs\ProcessGenerateInsightsAI;
 use App\Models\Document;
 use App\Models\DocumentTemplate;
-use Carbon\Carbon;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Request;
 use LucianoTonet\GroqLaravel\Facades\Groq;
 
 class DocumentService
 {
     protected const MODEL_NAME = 'llama-3.3-70b-versatile';
 
-    public function createDocumentAndDispatchInsights($request)
+    public function createDocumentAndDispatchInsights(array $request): Document
     {
         $documentContent = $this->generateLlmDocument($request['conversation'], $request['template']);
 
@@ -33,7 +28,7 @@ class DocumentService
         return $document;
     }
 
-    public function generateLlmDocument($context, $templateId)
+    public function generateLlmDocument(array $context, int $templateId): string
     {   
         $template = DocumentTemplate::findOrFail($templateId);
 
@@ -42,7 +37,7 @@ class DocumentService
         return $response;
     }
 
-    public function llmResponseByTemplate($context, $template, bool $forceJsonFormat = false): string
+    public function llmResponseByTemplate(array $context, string $template, bool $forceJsonFormat = false): string
     {
         $context = $this->mergeContextChunks($context);
 
@@ -72,17 +67,16 @@ class DocumentService
         return $response['choices'][0]['message']['content'];
     }
 
-    public function mergeContextChunks($contextChunks): string
+    public function mergeContextChunks(array $contextChunks): string
     {
         $mergedContext = '';
         foreach ($contextChunks as $chunk) {
             $mergedContext .= $chunk['text'] . ' ';
         }
         return trim($mergedContext);    
-
     }
 
-    public function generateInsightsAI($context) 
+    public function generateInsightsAI(array $context): array
     {
         $promptTemplate = config("prompts.ai_insights");
         $insights = $this->llmResponseByTemplate($context, $promptTemplate, true);

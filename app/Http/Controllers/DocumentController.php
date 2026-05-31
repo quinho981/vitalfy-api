@@ -19,7 +19,7 @@ class DocumentController extends Controller
         $this->documentService = $documentService;
     }
 
-    public function update(Document $document, Request $request)
+    public function update(Document $document, Request $request): Document
     {
         $this->authorize('update', $document);
 
@@ -29,8 +29,11 @@ class DocumentController extends Controller
         return $document;
     }
 
-    public function generate(Request $request) {
-        return $this->documentService->createDocumentAndDispatchInsights($request->all());
+    public function generate(Request $request): JsonResponse
+    {
+        $document = $this->documentService->createDocumentAndDispatchInsights($request->all());
+
+        return response()->json($document, 201);
     }
 
     public function regenerateInsights(Document $document): JsonResponse
@@ -46,13 +49,13 @@ class DocumentController extends Controller
         ], 200);
     }
 
-    public function refine(Request $request)
+    public function refine(Request $request): JsonResponse
     {
         $refined = $this->documentService->refineDocument($request->all());
 
         return response()->json([
             'content' => $refined
-        ]);
+        ], 200);
     }
      
     public function generatePdf(Document $document)

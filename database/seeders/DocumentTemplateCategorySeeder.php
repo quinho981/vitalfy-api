@@ -14,7 +14,8 @@ class DocumentTemplateCategorySeeder extends Seeder
         ['id' => 3, 'name' => 'Diagnóstico', 'color' => 'bg-purple-50 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400', 'icon' => 'TestTubeDiagonal '],
         ['id' => 4, 'name' => 'Pediátrica', 'color' => 'bg-pink-50 text-pink-600 dark:bg-pink-500/10 dark:text-pink-400', 'icon' => 'Baby'],
         ['id' => 5, 'name' => 'Saúde Mental', 'color' => 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400', 'icon' => 'Brain'],
-        ['id' => 6, 'name' => 'Reabilitação', 'color' => 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400', 'icon' => 'Activity']
+        ['id' => 6, 'name' => 'Reabilitação', 'color' => 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400', 'icon' => 'Activity'],
+        ['id' => 7, 'name' => 'Veterinária', 'color' => 'bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400', 'icon' => 'PawPrint']
     ];
 
     /**

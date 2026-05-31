@@ -9,7 +9,9 @@ use App\Support\AudioLimits;
 use App\Support\PlanLimits;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -38,7 +40,7 @@ class TranscriptService
             ->paginate(10);
     }
 
-    public function searchUserTranscripts($request, $userId): Collection
+    public function searchUserTranscripts(array $request, int $userId): Collection
     {
         $username = $request['user'] ?? null;
         $date = $request['date'] ?? null;
@@ -64,7 +66,7 @@ class TranscriptService
         return $query->limit(30)->get();
     }
 
-    private function baseTranscriptHistoryQuery()
+    private function baseTranscriptHistoryQuery(): Builder
     {
         return $this->transcript
             ->with([
@@ -105,7 +107,7 @@ class TranscriptService
         return $transcript;
     }
 
-    public function processAudioAndBuildConversation($request): array
+    private function processAudioAndBuildConversation(StoreTranscriptRequest $request): array
     {
         $file = $request->file('audio');
   
@@ -152,7 +154,7 @@ class TranscriptService
         ];
     }
 
-    public function storeAndGenerateDocument(StoreTranscriptRequest $request)
+    public function storeAndGenerateDocument(StoreTranscriptRequest $request): array
     {
         $user = $request->user();
         $remainingTranscripts = null;
@@ -209,7 +211,7 @@ class TranscriptService
         return PlanLimits::FREE_MONTHLY_TRANSCRIPTS - $usedTranscripts;
     }
 
-    private function getAudioContent($file): array
+    private function getAudioContent(UploadedFile $file): array
     {
         $mimeType = $file->getMimeType();
         $content = file_get_contents($file->getRealPath());
@@ -233,16 +235,15 @@ class TranscriptService
         return $conversation;
     }
 
-    public function getLastEndUtteranceTime($utterances)
+    private function getLastEndUtteranceTime(array $utterances): int
     {
         if (empty($utterances)) return 0;
 
         $lastUtterance = end($utterances);
-        // TODO: AJUSTAR TIPO DE DADO NO BANCO PARA CONSEGUIR REGISTRAR FLOAT
         return floor($lastUtterance['end']);
     }
 
-    private function validateAudioDuration($utterances): void
+    private function validateAudioDuration(array $utterances): void
     {
         $duration = $this->getLastEndUtteranceTime($utterances);
 

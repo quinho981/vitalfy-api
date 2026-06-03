@@ -106,7 +106,7 @@ class DashboardService
         return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId, $startWeek, $endWeek) {
             return Transcript::query()
                 ->selectRaw("
-                    EXTRACT(DOW FROM created_at AT TIME ZONE 'America/Sao_Paulo') as day_of_week,
+                    EXTRACT(DOW FROM created_at) as day_of_week,
                     COUNT(*) as total
                 ")
                 ->where('user_id', $userId)

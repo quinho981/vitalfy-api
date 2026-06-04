@@ -47,6 +47,10 @@ class DocumentService
             'model' => self::MODEL_NAME,
             'messages' => [
                 [
+                    'role' => 'system',
+                    'content' => 'Utilize terminologia médica formal.'
+                ],
+                [
                     'role' => 'user',
                     'content' => $prompt
                 ],

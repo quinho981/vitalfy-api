@@ -44,6 +44,7 @@ return [
         - potential risks or red flags
         - plausible differential diagnoses
         - possible investigations and clinical conduct
+        - apply Brazilian ACCR (Acolhimento com Classificação de Risco) principles when determining case severity
 
         Do NOT show this reasoning in the response.
 
@@ -52,7 +53,7 @@ return [
         {
             'medical_analysis': {
                 'red_flags': ['alert1', 'alert2'],
-                'case_severity': ['low risk | moderate risk | high risk'],
+                'case_severity': ['vermelho | laranja | amarelo | verde | azul'],
                 'brief_description': ['short clinical summary'],
                 'possible_diagnoses': ['diagnosis1', 'diagnosis2', 'diagnosis3'],
                 'suggested_cid_codes': ['CID code — title', 'CID code — title'],
@@ -65,7 +66,23 @@ return [
         Field guidelines:
 
         - red_flags: Clinical signs that may indicate severity or risk.
-        - case_severity: General estimate of case severity. only this severities:(low risk, moderate risk, high risk).
+
+        - case_severity: Classify the patient according to the Brazilian ACCR (Acolhimento com Classificação de Risco) system used in emergency and urgent care services.
+
+          Use only one of the following classifications:
+          - vermelho: Immediate life-threatening condition or imminent risk of death. Examples include cardiorespiratory arrest, severe respiratory distress, shock, unconsciousness, active seizures, severe trauma with instability, or any condition requiring immediate intervention.
+          - laranja: Very urgent condition with high risk of clinical deterioration if not treated rapidly. Examples include intense chest pain suggestive of acute coronary syndrome, severe dyspnea, important neurological deficits, severe dehydration, altered mental status, or intense acute pain.
+          - amarelo: Urgent condition requiring medical assessment within a short period but without immediate risk of death. Examples include moderate pain, persistent fever with systemic symptoms, worsening chronic diseases, suspected infections requiring prompt evaluation, or symptoms assessment.
+          - verde: Low-complexity condition with low risk of deterioration. Stable patients with mild symptoms that can safely wait for evaluation.
+          - azul: Non-urgent condition without signs of severity. Administrative demands, routine evaluations, chronic complaints without recent worsening, or situations more appropriate for primary care follow-up.
+
+          IMPORTANT:
+          - Return only one classification.
+          - Do not infer symptoms that were not mentioned.
+          - Base the classification only on the information explicitly present in the clinical text.
+          - If there is insufficient information to support a higher-priority classification, choose the lowest severity level compatible with the available evidence.
+          - When multiple classifications may apply, always choose the highest severity level supported by the available evidence.
+
         - brief_description: Short clinical case summary in one sentence.
         - possible_diagnoses: Possible diagnostic hypotheses based on the context.
         - suggested_cid_codes: ICD codes and the title possibly related to the case.

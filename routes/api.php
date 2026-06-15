@@ -3,6 +3,7 @@
 use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TranscriptController;
@@ -15,6 +16,8 @@ use Laravel\Cashier\Http\Controllers\WebhookController;
 Route::middleware('throttle:auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
+    Route::post('/reset-password', [ForgotPasswordController::class, 'resetPassword']);
 });
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);

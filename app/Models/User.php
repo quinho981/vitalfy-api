@@ -3,10 +3,12 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Mail\ResetPasswordMail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Mail;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 
@@ -66,6 +68,14 @@ class User extends Authenticatable
     public function hasProPlan(): bool
     {
         return $this->activeSubscription()->exists();
+    }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $frontendUrl = config('app.frontend_url');
+        $resetUrl = $frontendUrl . '/auth/reset-password?token=' . $token . '&email=' . urlencode($this->email);
+
+        Mail::to($this->email)->send(new ResetPasswordMail($resetUrl, $this->name));
     }
 
     private function activeSubscription()

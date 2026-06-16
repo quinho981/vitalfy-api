@@ -30,22 +30,27 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
+        $validated = $request->validate([
+            'email'    => 'required|email',
             'password' => 'required',
+            'remember' => 'boolean',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        if (!Auth::attempt(['email' => $validated['email'], 'password' => $validated['password']])) {
             return response()->json(['message' => 'Invalid credentials'], 401);
         }
 
-        $user = Auth::user();
+        $user      = Auth::user();
+        $remember  = $request->boolean('remember', false);
+        $expiresAt = $remember ? now()->addDays(30) : now()->addDay();
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $token = $user->createToken('auth_token', ['*'], $expiresAt)->plainTextToken;
 
         return response()->json([
             'access_token' => $token,
-            'token_type' => 'Bearer',
+            'token_type'   => 'Bearer',
+            'remember'     => $remember,
+            'expires_at'   => $expiresAt->toISOString(),
         ]);
     }
 

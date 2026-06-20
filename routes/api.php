@@ -4,6 +4,7 @@ use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\DocumentTemplateController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TranscriptController;
@@ -21,6 +22,9 @@ Route::middleware('throttle:auth')->group(function () {
 });
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
+
+Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 
 Route::middleware([
     'auth:sanctum', 

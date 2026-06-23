@@ -2,8 +2,10 @@
 
 namespace App\Services;
 
+use App\Events\TranscriptCreated;
 use App\Http\Requests\StoreTranscriptRequest;
 use App\Jobs\ProcessGenerateInsightsAI;
+use App\Mail\TranscriptLimitWarningMail;
 use App\Models\Transcript;
 use App\Support\AudioLimits;
 use App\Support\PlanLimits;
@@ -14,6 +16,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 class TranscriptService
@@ -146,7 +149,10 @@ class TranscriptService
 
         if(!$user->hasProPlan()) {
             $remainingTranscripts = $this->getRemainingMonthlyTranscripts($user->id);
+            $this->dispatchLimitWarningIfNeeded($user, $remainingTranscripts);
         }
+
+        TranscriptCreated::dispatch($transcript, $user);
 
         return [
             'transcript' => $transcript,
@@ -191,9 +197,11 @@ class TranscriptService
 
         if(!$user->hasProPlan()) {
             $remainingTranscripts = $this->getRemainingMonthlyTranscripts($user->id);
+            $this->dispatchLimitWarningIfNeeded($user, $remainingTranscripts);
         }
 
         ProcessGenerateInsightsAI::dispatch($document->id, $conversation);
+        TranscriptCreated::dispatch($document->transcript, $user);
 
         return [
             'document' => $document,
@@ -201,7 +209,16 @@ class TranscriptService
         ];
     }
 
-    private function getRemainingMonthlyTranscripts(int $userId): int
+    private function dispatchLimitWarningIfNeeded($user, int $remaining): void
+    {
+        if ($remaining === 2) {
+            Mail::to($user->email)->queue(
+                new TranscriptLimitWarningMail($user->name, config('app.frontend_url'))
+            );
+        }
+    }
+
+    public function getRemainingMonthlyTranscripts(int $userId): int
     {
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();

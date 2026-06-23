@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserRegistered;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Str;
+use Illuminate\Support\Facades\URL;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
@@ -43,6 +45,14 @@ class SocialAuthController extends Controller
                 'avatar'    => $googleUser->getAvatar(),
                 'password'  => Hash::make(Str::random(32)),
             ]);
+
+            $verificationUrl = URL::temporarySignedRoute(
+                'verification.verify',
+                now()->addHour(),
+                ['id' => $user->getKey(), 'hash' => sha1($user->email)]
+            );
+
+            UserRegistered::dispatch($user, $verificationUrl);
         }
 
         $token = $user->createToken('google_auth', ['*'], now()->addDays(30))->plainTextToken;

@@ -2,17 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Mail\ResetPasswordMail;
+use App\Mail\WelcomeVerificationMail;
+use App\Models\Transcript;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Laravel\Cashier\Billable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, Billable;
@@ -60,6 +63,11 @@ class User extends Authenticatable
         return $this->hasMany(Subscription::class);
     }
 
+    public function transcripts(): HasMany
+    {
+        return $this->hasMany(Transcript::class);
+    }
+
     public function plan()
     {
         $subscription = $this->activeSubscription()->first();
@@ -78,6 +86,17 @@ class User extends Authenticatable
         $resetUrl = $frontendUrl . '/auth/reset-password?token=' . $token . '&email=' . urlencode($this->email);
 
         Mail::to($this->email)->send(new ResetPasswordMail($resetUrl, $this->name));
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addHour(),
+            ['id' => $this->getKey(), 'hash' => sha1($this->getEmailForVerification())]
+        );
+
+        Mail::to($this->email)->queue(new WelcomeVerificationMail($this->name, $verificationUrl));
     }
 
     private function activeSubscription()

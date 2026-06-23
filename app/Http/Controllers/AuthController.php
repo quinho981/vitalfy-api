@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserRegistered;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\URL;
 
 class AuthController extends Controller
 {
@@ -24,6 +26,13 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            now()->addHour(),
+            ['id' => $user->getKey(), 'hash' => sha1($user->email)]
+        );
+
+        UserRegistered::dispatch($user, $verificationUrl);
 
         return response()->json(['message' => 'User registered successfully'], 201);
     }

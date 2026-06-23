@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Events\TranscriptCreated;
+use App\Events\UserRegistered;
+use App\Listeners\SendFirstTranscriptionEmail;
+use App\Listeners\SendWelcomeEmailSequence;
 use App\Listeners\StripeEventListener;
 use App\Models\Document;
 use App\Models\Transcript;
@@ -34,6 +38,16 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             WebhookReceived::class,
             [StripeEventListener::class, 'handle']
+        );
+
+        Event::listen(
+            UserRegistered::class,
+            [SendWelcomeEmailSequence::class, 'handle']
+        );
+
+        Event::listen(
+            TranscriptCreated::class,
+            [SendFirstTranscriptionEmail::class, 'handle']
         );
 
         RateLimiter::for('auth', function (Request $request) {

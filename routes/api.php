@@ -3,6 +3,7 @@
 use App\Enums\PriceIdsEnum;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\SocialAuthController;
 use App\Http\Controllers\DocumentTemplateController;
@@ -23,6 +24,10 @@ Route::middleware('throttle:auth')->group(function () {
 
 Route::post('/stripe/webhook', [WebhookController::class, 'handleWebhook']);
 
+Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    ->middleware('signed')
+    ->name('verification.verify');
+
 Route::get('/auth/google', [SocialAuthController::class, 'redirectToGoogle']);
 Route::get('/auth/google/callback', [SocialAuthController::class, 'handleGoogleCallback']);
 
@@ -31,6 +36,8 @@ Route::middleware([
     'throttle:api'
 ])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/email/resend-verification', [EmailVerificationController::class, 'resend'])
+        ->middleware('throttle:6,1');
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     Route::get('/tokens', [AuthController::class, 'tokens']);

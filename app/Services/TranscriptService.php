@@ -87,7 +87,7 @@ class TranscriptService
     {
         return $this->transcript
             ->with([
-                'document:id,transcript_id,document_template_id,result,created_at',
+                'document:id,transcript_id,document_template_id,result,created_at,feedback',
                 'document.documentTemplate:id,name',
                 'document.ai_insights:id,document_id,possible_diagnoses,red_flags,case_severity,brief_description,possible_diagnoses,suggested_cid_codes,suggested_exams,suggested_conducts,missing_clinical_information'
             ])

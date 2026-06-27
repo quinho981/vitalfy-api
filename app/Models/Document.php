@@ -17,7 +17,8 @@ class Document extends Model
         'transcript_id',
         'document_template_id',
         'patient',
-        'result'
+        'result',
+        'feedback',
     ];
 
     public function transcript(): BelongsTo 

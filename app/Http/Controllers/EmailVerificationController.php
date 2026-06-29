@@ -9,7 +9,7 @@ use Illuminate\Http\Response;
 
 class EmailVerificationController extends Controller
 {
-    public function verify(Request $request, int $id, string $hash): RedirectResponse
+    public function verify(Request $request, string $id, string $hash): RedirectResponse
     {
         $frontendUrl = config('app.frontend_url');
         $user = User::find($id);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_plans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('plan_id')->constrained()->onDelete('cascade');
             $table->timestamp('unsubscription_at')->nullable();
             $table->boolean('active')->default(true);

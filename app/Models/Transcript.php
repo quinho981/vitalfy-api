@@ -47,7 +47,7 @@ class Transcript extends Model
         return $this->belongsTo(TranscriptType::class);
     }
 
-    public function scopeFromUserBetweenDates(Builder $query, int $userId, Carbon $start, Carbon $end): Builder
+    public function scopeFromUserBetweenDates(Builder $query, string $userId, Carbon $start, Carbon $end): Builder
     {
         return $query
             ->where('user_id', $userId)

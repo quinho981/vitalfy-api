@@ -10,7 +10,7 @@ class SubscriptionSyncService
     /**
      * Synchronization of user subscription data
      */
-    public static function syncUserData($userId)
+    public static function syncUserData(string $userId)
     {
         try {
             $user = User::find($userId);

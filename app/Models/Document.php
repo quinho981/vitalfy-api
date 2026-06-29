@@ -40,7 +40,7 @@ class Document extends Model
         return $this->hasOne(AiInsights::class);
     }
 
-    public function scopeFromUserBetweenDatesViaTranscript(Builder $query, int $userId, Carbon $start, Carbon $end): Builder
+    public function scopeFromUserBetweenDatesViaTranscript(Builder $query, string $userId, Carbon $start, Carbon $end): Builder
     {
         return $query
             ->whereHas('transcript', function (Builder $query) use ($userId) {

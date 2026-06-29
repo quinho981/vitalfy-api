@@ -36,14 +36,14 @@ class TranscriptService
         $this->documentService = $documentService;
     }
 
-    public function getUserTranscripts(int $userId): LengthAwarePaginator
+    public function getUserTranscripts(string $userId): LengthAwarePaginator
     {
         return $this->baseTranscriptHistoryQuery()
             ->where('user_id', $userId)
             ->paginate(10);
     }
 
-    public function searchUserTranscripts(array $request, int $userId): Collection
+    public function searchUserTranscripts(array $request, string $userId): Collection
     {
         $username = $request['user'] ?? null;
         $date = $request['date'] ?? null;
@@ -218,7 +218,7 @@ class TranscriptService
         }
     }
 
-    public function getRemainingMonthlyTranscripts(int $userId): int
+    public function getRemainingMonthlyTranscripts(string $userId): int
     {
         $startOfMonth = now()->startOfMonth();
         $endOfMonth = now()->endOfMonth();

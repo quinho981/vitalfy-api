@@ -85,12 +85,12 @@ class DashboardService
         };
     }
 
-    private function transcriptsTodayQuery(int $userId, Carbon $start, Carbon $end)
+    private function transcriptsTodayQuery(string $userId, Carbon $start, Carbon $end)
     {
         return Transcript::fromUserBetweenDates($userId, $start, $end);
     }
 
-    private function documentsTodayQuery(int $userId, Carbon $start, Carbon $end)
+    private function documentsTodayQuery(string $userId, Carbon $start, Carbon $end)
     {
         return Document::fromUserBetweenDatesViaTranscript($userId, $start, $end);
     }
@@ -101,7 +101,7 @@ class DashboardService
         return $totalTimeTranscripts / $totalTranscripts;
     }
 
-    private function currentWeekTranscripts(int $userId, Carbon $startWeek, Carbon $endWeek)
+    private function currentWeekTranscripts(string $userId, Carbon $startWeek, Carbon $endWeek)
     {
         return Cache::remember("dashboard:charts:week:{$userId}", 600, function () use ($userId, $startWeek, $endWeek) {
             return Transcript::query()
@@ -118,7 +118,7 @@ class DashboardService
         });
     }
 
-    private function countWeekTranscriptByType(int $userId, Carbon $startWeek, Carbon $endWeek)
+    private function countWeekTranscriptByType(string $userId, Carbon $startWeek, Carbon $endWeek)
     {
         return Cache::remember("dashboard:charts:type:{$userId}", 600, function () use ($userId, $startWeek, $endWeek) {
             return TranscriptType::select(['id', 'type'])
@@ -133,7 +133,7 @@ class DashboardService
         });
     }
 
-    public static function clear(int $userId)
+    public static function clear(string $userId)
     {
         foreach (['today', 'week', 'month'] as $period) {
             Cache::forget("dashboard:summary:{$period}:{$userId}:count");

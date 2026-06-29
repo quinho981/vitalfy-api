@@ -96,7 +96,7 @@ Route::middleware([
     });
 });
 
-Route::middleware('throttle:stream')->get('/stream/insights-ai/{documentId}', function ($documentId) {
+Route::middleware('throttle:stream')->get('/stream/insights-ai/{documentId}', function (string $documentId) {
     return response()->stream(function () use ($documentId) {
 
         $timeout = 15;

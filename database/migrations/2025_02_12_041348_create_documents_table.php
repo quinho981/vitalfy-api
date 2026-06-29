@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('documents', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('transcript_id')->constrained()->onDelete('cascade');
+            $table->uuid('id')->primary();
+            $table->foreignUuid('transcript_id')->constrained()->onDelete('cascade');
             $table->foreignId('document_template_id')->constrained()->onDelete('cascade');
             $table->string('title');
             $table->text('result');

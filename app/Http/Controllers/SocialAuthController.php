@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Events\UserRegistered;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Str;
 use Illuminate\Support\Facades\URL;
 use Laravel\Socialite\Facades\Socialite;
 

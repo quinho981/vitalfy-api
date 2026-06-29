@@ -83,7 +83,7 @@ class TranscriptService
             ->latest();
     }
 
-    public function getTranscriptAndDocument(int $id): object
+    public function getTranscriptAndDocument(string $id): object
     {
         return $this->transcript
             ->with([
@@ -95,13 +95,13 @@ class TranscriptService
             ->firstOrFail(['id', 'patient', 'created_at', 'end_conversation_time']);
     }
 
-    public function deleteTranscript(int $id): void
+    public function deleteTranscript(string $id): void
     {
         $transcript = $this->transcript->findOrFail($id);
         $transcript->delete();
     }
 
-    public function getConversations(int $id): object
+    public function getConversations(string $id): object
     {
         $transcript = $this->transcript
             ->where('id', $id)

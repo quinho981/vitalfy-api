@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('ai_insights', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('document_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignUuid('document_id')->constrained()->onDelete('cascade');
             $table->string('main_topics')->nullable();
             $table->string('identified_symptoms')->nullable();
             $table->string('possible_diagnoses')->nullable();

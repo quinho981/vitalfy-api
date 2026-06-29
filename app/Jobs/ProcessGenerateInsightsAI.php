@@ -13,13 +13,13 @@ class ProcessGenerateInsightsAI implements ShouldQueue
 {
     use Queueable;
 
-    protected int $documentId;
+    protected string $documentId;
     protected array $conversation;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(int $documentId, array $conversation)
+    public function __construct(string $documentId, array $conversation)
     {
         $this->documentId = $documentId;
         $this->conversation = $conversation;
